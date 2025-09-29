@@ -1,24 +1,21 @@
-from flask import Flask, render_template, request, redirect
-import smtplib
-from email.message import EmailMessage
+from flask import Flask, render_template, request
 import os
+import csv
+from datetime import datetime
 
 app = Flask(__name__)
 
-from flask import send_from_directory
-
-@app.route("/teste-logo")
-def teste_logo():
-    return send_from_directory("static", "logo.png")
-
-
 UPLOAD_FOLDER = "uploads"
+CSV_FILE = "cadastros.csv"
+
+# Cria pastas e CSV se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-EMAIL_ORIGEM = "lucasemiriam2017@gmail.com"       # seu e-mail
-EMAIL_DESTINO = "lucas.vargas3@farmaciassaojoao.com.br"  # e-mail que vai receber os cadastros
-SENHA_APP = "spvo qdyx pblf mqpf"            # senha de app do Gmail
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo"])
 
 @app.route("/")
 def index():
@@ -32,41 +29,23 @@ def enviar():
     email_usuario = request.form["email_usuario"]
     telefone = request.form["telefone"]
 
-    # Criar a mensagem de e-mail
-    msg = EmailMessage()
-    msg["Subject"] = "Novo cadastro de cliente"
-    msg["From"] = EMAIL_ORIGEM
-    msg["To"] = EMAIL_DESTINO
-
-    corpo = f"""
-Novo cadastro recebido:
-
-Nome: {nome}
-CPF: {cpf}
-Instituição: {instituicao}
-E-mail do usuário: {email_usuario}
-Telefone: {telefone}
-"""
-    msg.set_content(corpo)
-
-    # Verificar se enviou arquivo
+    # Salvar arquivo, se houver
     arquivo = request.files.get("arquivo")
-    if arquivo:
-        caminho = os.path.join(UPLOAD_FOLDER, arquivo.filename)
+    nome_arquivo = ""
+    if arquivo and arquivo.filename != "":
+        nome_arquivo = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{arquivo.filename}"
+        caminho = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         arquivo.save(caminho)
-        with open(caminho, "rb") as f:
-            conteudo = f.read()
-        msg.add_attachment(conteudo, maintype="application", subtype="octet-stream", filename=arquivo.filename)
-        # opcional: apagar após envio
-        os.remove(caminho)
 
-    # Enviar e-mail
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(EMAIL_ORIGEM, SENHA_APP)
-        smtp.send_message(msg)
+    # Salvar dados no CSV
+    with open(CSV_FILE, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), nome, cpf, instituicao, email_usuario, telefone, nome_arquivo])
 
     return "✅ Cadastro enviado com sucesso!"
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
 
