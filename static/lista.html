@@ -5,15 +5,28 @@
     <title>Lista de Cadastros</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .error { background:#ffe6e6; color:#b00000; padding:12px; border-radius:6px; margin-bottom:12px; }
+        .info { background:#eef7ff; color:#045a9c; padding:8px 12px; border-radius:6px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
         th { background-color: #f4f4f4; }
         a { color: #007bff; text-decoration: none; }
         a:hover { text-decoration: underline; }
+        .small { font-size: 13px; color: #666; }
     </style>
 </head>
 <body>
     <h2>📋 Lista de Cadastros</h2>
+
+    {% if error %}
+        <div class="error">Erro ao carregar a lista: {{ error }}</div>
+    {% endif %}
+
+    <div class="info small">
+        Total de cadastros: {{ cadastros|length }} — 
+        <a href="/baixar-csv">⬇️ Baixar CSV</a>
+    </div>
+
     <table>
         <thead>
             <tr>
@@ -29,17 +42,17 @@
         <tbody>
             {% for cadastro in cadastros %}
             <tr>
-                <td>{{ cadastro["Data"] }}</td>
-                <td>{{ cadastro["Nome"] }}</td>
-                <td>{{ cadastro["CPF"] }}</td>
-                <td>{{ cadastro["Instituição"] }}</td>
-                <td>{{ cadastro["E-mail"] }}</td>
-                <td>{{ cadastro["Telefone"] }}</td>
+                <td>{{ cadastro.get("Data","") }}</td>
+                <td>{{ cadastro.get("Nome","") }}</td>
+                <td>{{ cadastro.get("CPF","") }}</td>
+                <td>{{ cadastro.get("Instituição","") }}</td>
+                <td>{{ cadastro.get("E-mail","") }}</td>
+                <td>{{ cadastro.get("Telefone","") }}</td>
                 <td>
-                    {% if cadastro["Arquivo"] %}
-                        <a href="/uploads/{{ cadastro['Arquivo'] }}" target="_blank">📎 Baixar</a>
+                    {% if cadastro.get("Arquivo") %}
+                        <a href="/uploads/{{ cadastro.get('Arquivo') }}" target="_blank">📎 Baixar</a>
                     {% else %}
-                        Nenhum
+                        <span class="small">Nenhum</span>
                     {% endif %}
                 </td>
             </tr>
