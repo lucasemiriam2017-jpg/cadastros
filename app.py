@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, send_from_directory
+from flask import Flask, render_template, request, send_file, redirect, url_for
 import os
 import csv
 from datetime import datetime
@@ -9,7 +9,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
 
-# Cria pastas e CSV se não existirem
+# Cria pastas se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -55,31 +55,32 @@ def enviar():
     return f"✅ Cadastro enviado com sucesso! <a href='/lista'>Ver lista de cadastros</a>"
 
 # -----------------------------
-# Rota para baixar o CSV
+# Rota para baixar o CSV completo
 # -----------------------------
 @app.route("/baixar-csv")
 def baixar_csv():
     return send_file(CSV_FILE, as_attachment=True)
 
 # -----------------------------
-# Rota para visualizar uploads
+# Rota para listar arquivos enviados
 # -----------------------------
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
-
-# -----------------------------
-# Rota para listar arquivos da pasta uploads
-# -----------------------------
-@app.route('/ver-uploads')
+@app.route("/ver-uploads")
 def ver_uploads():
     arquivos = os.listdir(UPLOAD_FOLDER)
     arquivos = [f for f in arquivos if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
+    # Criar links clicáveis
     links = [f"<a href='/uploads/{a}' target='_blank'>{a}</a>" for a in arquivos]
-    return "<br>".join(links)
+    return "<h2>📁 Arquivos enviados</h2><br>" + "<br>".join(links)
 
 # -----------------------------
-# Rota para listar cadastros (template estilizado)
+# Servir arquivos da pasta uploads
+# -----------------------------
+@app.route("/uploads/<filename>")
+def uploads(filename):
+    return send_file(os.path.join(UPLOAD_FOLDER, filename))
+
+# -----------------------------
+# Rota para listar cadastros (com arquivos clicáveis)
 # -----------------------------
 @app.route("/lista")
 def lista():
@@ -99,6 +100,8 @@ def lista():
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
+
 
 
 
