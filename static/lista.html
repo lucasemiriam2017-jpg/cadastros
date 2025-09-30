@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Cadastros</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h2>📋 Lista de Cadastros</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Instituição</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Arquivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cadastro in cadastros %}
+            <tr>
+                <td>{{ cadastro["Data"] }}</td>
+                <td>{{ cadastro["Nome"] }}</td>
+                <td>{{ cadastro["CPF"] }}</td>
+                <td>{{ cadastro["Instituição"] }}</td>
+                <td>{{ cadastro["E-mail"] }}</td>
+                <td>{{ cadastro["Telefone"] }}</td>
+                <td>
+                    {% if cadastro["Arquivo"] %}
+                        <a href="/uploads/{{ cadastro['Arquivo'] }}" target="_blank">📎 Baixar</a>
+                    {% else %}
+                        Nenhum
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
