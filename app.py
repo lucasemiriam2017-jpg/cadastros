@@ -10,8 +10,8 @@ UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
 
 # Credenciais do admin
-ADMIN_USER = "admin"
-ADMIN_PASS = "1234"
+ADMIN_USER = "convenios2025"
+ADMIN_PASS = "conv@2025*"
 
 # Cria pastas e CSV se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
@@ -112,6 +112,7 @@ def uploads(filename):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
