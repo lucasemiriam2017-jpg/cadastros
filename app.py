@@ -1,13 +1,18 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file, redirect, url_for, session, Response
 import os
 import csv
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = "uma_chave_secreta_super_segura"  # necessário para sessões
 
 UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
+
+# Usuário e senha administrativos
+ADMIN_USER = "admin"
+ADMIN_PASS = "123456"
 
 # Cria pastas se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
@@ -52,38 +57,78 @@ def enviar():
             nome, cpf, instituicao, email_usuario, telefone, nome_arquivo
         ])
 
-    return f"✅ Cadastro enviado com sucesso! <a href='/lista'>Ver lista de cadastros</a>"
+    # ✅ Mensagem de confirmação sem link para lista
+    return "✅ Cadastro enviado com sucesso!"
 
 # -----------------------------
-# Rota para baixar o CSV completo
+# Rota para baixar o CSV
 # -----------------------------
 @app.route("/baixar-csv")
 def baixar_csv():
+    # Verifica se usuário está logado como admin
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
     return send_file(CSV_FILE, as_attachment=True)
-
-# -----------------------------
-# Rota para listar arquivos enviados
-# -----------------------------
-@app.route("/ver-uploads")
-def ver_uploads():
-    arquivos = os.listdir(UPLOAD_FOLDER)
-    arquivos = [f for f in arquivos if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
-    # Criar links clicáveis
-    links = [f"<a href='/uploads/{a}' target='_blank'>{a}</a>" for a in arquivos]
-    return "<h2>📁 Arquivos enviados</h2><br>" + "<br>".join(links)
 
 # -----------------------------
 # Servir arquivos da pasta uploads
 # -----------------------------
 @app.route("/uploads/<filename>")
 def uploads(filename):
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
     return send_file(os.path.join(UPLOAD_FOLDER, filename))
 
 # -----------------------------
-# Rota para listar cadastros (com arquivos clicáveis)
+# Rota para listar arquivos enviados
+# -----------------------------
+@app.route("/ver-uploads")
+def ver_uploads():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    arquivos = os.listdir(UPLOAD_FOLDER)
+    arquivos = [f for f in arquivos if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
+    links = [f"<a href='/uploads/{a}' target='_blank'>{a}</a>" for a in arquivos]
+    return "<h2>📁 Arquivos enviados</h2><br>" + "<br>".join(links)
+
+# -----------------------------
+# Rota de login admin
+# -----------------------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        usuario = request.form.get("usuario")
+        senha = request.form.get("senha")
+        if usuario == ADMIN_USER and senha == ADMIN_PASS:
+            session["logged_in"] = True
+            return redirect(url_for("lista"))
+        else:
+            return "❌ Usuário ou senha incorretos!"
+    return """
+    <h2>Login Administrativo</h2>
+    <form method="post">
+        Usuário: <input type="text" name="usuario"><br>
+        Senha: <input type="password" name="senha"><br>
+        <button type="submit">Entrar</button>
+    </form>
+    """
+
+# -----------------------------
+# Rota de logout
+# -----------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return "✅ Logout realizado! <a href='/login'>Login novamente</a>"
+
+# -----------------------------
+# Rota para listar cadastros
 # -----------------------------
 @app.route("/lista")
 def lista():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
     cadastros = []
     error = None
     try:
@@ -99,7 +144,10 @@ def lista():
 # Inicialização
 # -----------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+
 
 
 
