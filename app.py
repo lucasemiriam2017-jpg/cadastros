@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, send_from_directory
 import os
 import csv
 from datetime import datetime
@@ -47,13 +47,30 @@ def enviar():
 
     return "✅ Cadastro enviado com sucesso!"
 
-# Nova rota para baixar o CSV
+# Rota para baixar o CSV completo
 @app.route("/baixar-csv")
 def baixar_csv():
     return send_file(CSV_FILE, as_attachment=True)
 
+# Rota para baixar arquivos enviados
+@app.route("/uploads/<path:filename>")
+def baixar_arquivo(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
+# Rota para listar os cadastros
+@app.route("/lista")
+def lista():
+    cadastros = []
+    with open(CSV_FILE, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            cadastros.append(row)
+    return render_template("lista.html", cadastros=cadastros)
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+
 
 
 
