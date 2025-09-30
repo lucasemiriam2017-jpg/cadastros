@@ -11,8 +11,8 @@ UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
 
 # Usuário e senha administrativos
-ADMIN_USER = "admin"
-ADMIN_PASS = "123456"
+ADMIN_USER = "convenios"
+ADMIN_PASS = "conv@2025*"
 
 # Cria pastas se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
@@ -146,6 +146,7 @@ def lista():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
