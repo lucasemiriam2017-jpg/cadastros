@@ -1,4 +1,4 @@
-Flask
-Flask-SQLAlchemy
-psycopg2-binary
-python-dotenv
+Flask==2.3.5
+Werkzeug==2.3.7
+
+
