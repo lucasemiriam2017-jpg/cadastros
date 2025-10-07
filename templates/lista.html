@@ -1,63 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Lista de Cadastros</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .error { background:#ffe6e6; color:#b00000; padding:12px; border-radius:6px; margin-bottom:12px; }
-        .info { background:#eef7ff; color:#045a9c; padding:8px 12px; border-radius:6px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
-        th { background-color: #f4f4f4; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .small { font-size: 13px; color: #666; }
-    </style>
+<meta charset="UTF-8">
+<title>Lista de Cadastros</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+    h2 { margin-bottom: 15px; }
+    table { width: 100%; border-collapse: collapse; background-color: #fff; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #4a90e2; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    a { text-decoration: none; color: #4a90e2; }
+    a:hover { text-decoration: underline; }
+    .top-links { margin-bottom: 15px; }
+</style>
 </head>
 <body>
-    <h2>📋 Lista de Cadastros</h2>
 
-    {% if error %}
-        <div class="error">Erro ao carregar a lista: {{ error }}</div>
-    {% endif %}
+<h2>Lista de Cadastros</h2>
 
-    <div class="info small">
-        Total de cadastros: {{ cadastros|length }} — 
-        <a href="/baixar-csv">⬇️ Baixar CSV</a>
-    </div>
+<div class="top-links">
+    Total de cadastros: {{ cadastros|length }} —
+    <a href="{{ url_for('baixar_csv') }}">Baixar CSV</a>
+</div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>Instituição</th>
-                <th>E-mail</th>
-                <th>Telefone</th>
-                <th>Arquivo</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cadastro in cadastros %}
-            <tr>
-                <td>{{ cadastro.get("Data","") }}</td>
-                <td>{{ cadastro.get("Nome","") }}</td>
-                <td>{{ cadastro.get("CPF","") }}</td>
-                <td>{{ cadastro.get("Instituição","") }}</td>
-                <td>{{ cadastro.get("E-mail","") }}</td>
-                <td>{{ cadastro.get("Telefone","") }}</td>
-                <td>
-                    {% if cadastro.get("Arquivo") %}
-                        <a href="/uploads/{{ cadastro.get('Arquivo') }}" target="_blank">📎 Baixar</a>
-                    {% else %}
-                        <span class="small">Nenhum</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table>
+    <tr>
+        <th>Data</th>
+        <th>Nome</th>
+        <th>CPF</th>
+        <th>Instituição</th>
+        <th>E-mail</th>
+        <th>Telefone</th>
+        <th>Arquivo</th>
+    </tr>
+    {% for c in cadastros %}
+    <tr>
+        <td>{{ c['Data'] }}</td>
+        <td>{{ c['Nome'] }}</td>
+        <td>{{ c['CPF'] }}</td>
+        <td>{{ c['Instituição'] }}</td>
+        <td>{{ c['E-mail'] }}</td>
+        <td>{{ c['Telefone'] }}</td>
+        <td>
+            {% if c['Arquivo'] %}
+            <a href="{{ url_for('uploads', filename=c['Arquivo']) }}">📎 Baixar</a>
+            {% else %}
+            Nenhum
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
 </body>
 </html>
+
