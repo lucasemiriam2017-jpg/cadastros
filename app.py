@@ -2,17 +2,20 @@ from flask import Flask, render_template, request, send_file, redirect, url_for,
 import os
 import csv
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()  # carrega variáveis do .env automaticamente
+
 
 # -------------------- CONFIGURAÇÃO --------------------
 app = Flask(__name__)
-app.secret_key = "chave-secreta-muito-segura"  # troque por algo mais forte
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")  # fallback só para dev
 
 UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
 
 # Credenciais do admin
-ADMIN_USER = "convenios2025"
-ADMIN_PASS = "conv@2025*"
+ADMIN_USER = os.environ.get("ADMIN_USER")
+ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
 # Criar pastas e CSV se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
@@ -126,6 +129,7 @@ def uploads(filename):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
