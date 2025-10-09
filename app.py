@@ -66,7 +66,7 @@ def enviar():
             lgpd_aceite
         ])
 
-    return "✅ Cadastro enviado com sucesso! Obrigado por autorizar o uso dos seus dados conforme a LGPD."
+    return render_template("obrigado.html", nome=nome, instituicao=instituicao)
 
 # -------------------- ROTAS ADMIN --------------------
 @app.route("/login", methods=["GET", "POST"])
@@ -132,6 +132,7 @@ def uploads(filename):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
