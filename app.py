@@ -3,12 +3,13 @@ import os
 import csv
 from datetime import datetime
 from dotenv import load_dotenv
-load_dotenv()  # carrega variáveis do .env automaticamente
 
+# Carrega variáveis de ambiente
+load_dotenv()
 
 # -------------------- CONFIGURAÇÃO --------------------
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")  # fallback só para dev
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")  # Fallback só para dev
 
 UPLOAD_FOLDER = "uploads"
 CSV_FILE = "cadastros.csv"
@@ -17,14 +18,14 @@ CSV_FILE = "cadastros.csv"
 ADMIN_USER = os.environ.get("ADMIN_USER")
 ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
-# Criar pastas e CSV se não existirem
+# Cria pastas e CSV se não existirem
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 if not os.path.exists(CSV_FILE):
     with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo"])
+        writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo", "Consentimento LGPD"])
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
@@ -40,6 +41,7 @@ def enviar():
     instituicao = request.form.get("instituicao", "")
     email_usuario = request.form.get("email_usuario", "")
     telefone = request.form.get("telefone", "")
+    lgpd_aceite = request.form.get("lgpd_aceite", "Não informado")
 
     # Salvar arquivo, se houver
     arquivo = request.files.get("arquivo")
@@ -60,10 +62,11 @@ def enviar():
             instituicao,
             email_usuario,
             telefone,
-            nome_arquivo
+            nome_arquivo,
+            lgpd_aceite
         ])
 
-    return "✅ Cadastro enviado com sucesso!"
+    return "✅ Cadastro enviado com sucesso! Obrigado por autorizar o uso dos seus dados conforme a LGPD."
 
 # -------------------- ROTAS ADMIN --------------------
 @app.route("/login", methods=["GET", "POST"])
@@ -129,6 +132,8 @@ def uploads(filename):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
+
 
 
 
