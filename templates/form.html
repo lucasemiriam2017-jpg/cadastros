@@ -3,97 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Cliente</title>
-    <!-- Link para CSS, se tiver algum arquivo estático -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Cadastro de Descontos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Exemplo de formatação simples caso não tenha CSS externo */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff, #ffffff);
             margin: 0;
             padding: 0;
         }
         .container {
-            max-width: 500px;
+            max-width: 480px;
             margin: 50px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        h1 {
+        h2 {
             text-align: center;
-            margin-bottom: 20px;
+            color: #333;
+            margin-bottom: 25px;
         }
-        label {
-            display: block;
-            margin-top: 15px;
-        }
-        input[type="text"], input[type="email"], input[type="file"], input[type="tel"] {
+        input, select, textarea {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
             box-sizing: border-box;
         }
-        .lgpd {
-            margin-top: 15px;
-        }
-        button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
+        input[type="submit"] {
+            background-color: #4a90e2;
             color: white;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
+            border-radius: 8px;
+            padding: 12px;
+            transition: 0.3s;
         }
-        button:hover {
-            background-color: #0056b3;
+        input[type="submit"]:hover {
+            background-color: #357ab8;
         }
-        .logo {
-            display: block;
-            margin: 0 auto 20px;
-            max-width: 200px;
+        label {
+            font-size: 13px;
+            color: #333;
+        }
+        .lgpd {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .lgpd input {
+            margin-top: 3px;
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
-        <h1>Cadastro de Cliente</h1>
-        <form action="{{ url_for('enviar') }}" method="post" enctype="multipart/form-data">
-            <label for="nome">Nome completo:</label>
-            <input type="text" name="nome" id="nome" required>
+        <h2>📄 Cadastro para Desconto</h2>
+        <form action="/enviar" method="POST" enctype="multipart/form-data">
+            <input type="text" name="nome" placeholder="Digite seu nome" required>
+            <input type="text" name="cpf" placeholder="Digite seu CPF" required>
+            <input type="text" name="instituicao" placeholder="Nome da instituição" required>
+            <input type="email" name="email_usuario" placeholder="Seu e-mail" required>
+            <input type="tel" name="telefone" placeholder="Telefone com DDD" required>
+            <input type="file" name="arquivo">
 
-            <label for="cpf">CPF:</label>
-            <input type="text" name="cpf" id="cpf" required>
+            <label class="lgpd">
+                <input type="checkbox" name="lgpd" required>
+                Autorizo o uso dos meus dados pessoais (como nome, CPF, e-mail e telefone) exclusivamente para fins de cadastro e concessão de descontos, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Estou ciente de que meus dados não serão compartilhados com terceiros e poderão ser excluídos mediante solicitação.
+            </label>
 
-            <label for="instituicao">Instituição:</label>
-            <input type="text" name="instituicao" id="instituicao">
-
-            <label for="email_usuario">E-mail:</label>
-            <input type="email" name="email_usuario" id="email_usuario">
-
-            <label for="telefone">Telefone:</label>
-            <input type="tel" name="telefone" id="telefone">
-
-            <label for="arquivo">Arquivo (opcional):</label>
-            <input type="file" name="arquivo" id="arquivo">
-
-            <div class="lgpd">
-                <input type="checkbox" name="lgpd" id="lgpd" required>
-                <label for="lgpd">
-                    Autorizo o uso dos meus dados pessoais (como nome, CPF, e-mail e telefone) exclusivamente para fins de cadastro e concessão de descontos, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Estou ciente de que meus dados não serão compartilhados com terceiros e poderão ser excluídos mediante solicitação.
-                </label>
-            </div>
-
-            <button type="submit">Enviar Cadastro</button>
+            <input type="submit" value="✅ Enviar Cadastro">
         </form>
     </div>
 </body>
 </html>
+
+
 
 
 
