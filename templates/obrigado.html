@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro Enviado</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #a0c4ff, #caf0f8);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    animation: bgGradient 10s ease infinite;
+}
+
+@keyframes bgGradient {
+    0% {background-position:0% 50%;}
+    50% {background-position:100% 50%;}
+    100% {background-position:0% 50%;}
+}
+
+.container {
+    max-width: 520px;
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    transform: scale(0);
+    animation: popIn 0.6s forwards;
+}
+
+@keyframes popIn {
+    to { transform: scale(1); }
+}
+
+.logo {
+    display: block;
+    margin: 0 auto 20px;
+    max-width: 160px;
+}
+
+@keyframes rotateLogo {
+    0% {transform: rotate(0deg);}
+    50% {transform: rotate(10deg);}
+    100% {transform: rotate(-10deg);}
+}
+
+h2 {
+    color: #4a90e2;
+    margin-bottom: 10px;
+}
+
+p {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.button-link {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #4a90e2;
+    color: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.button-link:hover {
+    background-color: #357ab8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Confetti animation */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #ffadad;
+    top: 0;
+    left: 50%;
+    animation: fall 3s linear infinite;
+}
+
+@keyframes fall {
+    0% {transform: translateY(0) rotate(0deg);}
+    100% {transform: translateY(600px) rotate(360deg);}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+<h2>🎉 Obrigado, {{ nome }}!</h2>
+<p>Seu cadastro foi realizado com sucesso.<br>Dentro de 48 horas você poderá aproveitar seu desconto!<br>Basta informar que você possui uma parceria atraves da empresa {{ instituicao }}!</p>
+<a href="/" class="button-link">Voltar para o formulário</a>
+</div>
+
+</script>
+</body>
+</html>
