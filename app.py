@@ -25,7 +25,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 if not os.path.exists(CSV_FILE):
     with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo", "Consentimento LGPD"])
+        writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo"])
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
@@ -132,6 +132,7 @@ def uploads(filename):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
