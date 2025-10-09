@@ -113,8 +113,6 @@
                     <td>
                         {% if cadastro.get("Arquivo") %}
                             <a href="{{ url_for('uploads', filename=cadastro['Arquivo']) }}" target="_blank">Visualizar</a>
-                                📎 {{ cadastro.get('Arquivo') }}
-                            </a>
                         {% else %}
                             <span class="small">Nenhum</span>
                         {% endif %}
