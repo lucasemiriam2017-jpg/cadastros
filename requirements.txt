@@ -1,6 +1,9 @@
 Flask==3.0.3
 gunicorn==22.0.0
 python-dotenv==1.0.1
+pip install psycopg2-binary
+pip install flask_sqlalchemy
+
 
 
 
