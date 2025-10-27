@@ -104,12 +104,12 @@
             <tbody>
                 {% for cadastro in cadastros %}
                 <tr>
-                    <td>{{ cadastro.data.strftime('%d/%m/%Y') if cadastro.data else '' }}</td>
-                    <td>{{ cadastro.nome }}</td>
-                    <td>{{ cadastro.cpf }}</td>
-                    <td>{{ cadastro.instituicao }}</td>
-                    <td>{{ cadastro.email_usuario }}</td>
-                    <td>{{ cadastro.telefone }}</td>
+                    <td>{{ cadastro['data'].strftime('%d/%m/%Y') if cadastro['data'] else '' }}</td>
+                    <td>{{ cadastro['nome'] }}</td>
+                    <td>{{ cadastro['cpf'] }}</td>
+                    <td>{{ cadastro['instituicao'] }}</td>
+                    <td>{{ cadastro['email_usuario'] }}</td>
+                    <td>{{ cadastro['telefone'] }}</td>
                     <td>
                         {% if cadastro.nome_arquivo %}
                             <a href="{{ url_for('uploads', filename=cadastro.nome_arquivo) }}" target="_blank">Visualizar</a>
