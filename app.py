@@ -144,9 +144,10 @@ def uploads(cadastro_id):
     arquivo = obter_arquivo(cadastro_id)
     if not arquivo or not arquivo['arquivo_bytes']:
         return "Arquivo não encontrado", 404
-    return send_file(BytesIO(arquivo['arquivo_bytes']), download_name=arquivo['nome_arquivo'], as_attachment=False)
+    return send_file(BytesIO(arquivo['arquivo_bytes']), download_name=arquivo['nome_arquivo'], as_attachment=True)
 
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
