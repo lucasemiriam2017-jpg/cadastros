@@ -104,12 +104,12 @@
             <tbody>
                 {% for cadastro in cadastros %}
                 <tr>
-                    <td>{{ cadastro.get("Data","") }}</td>
-                    <td>{{ cadastro.get("Nome","") }}</td>
-                    <td>{{ cadastro.get("CPF","") }}</td>
-                    <td>{{ cadastro.get("Instituição","") }}</td>
-                    <td>{{ cadastro.get("E-mail","") }}</td>
-                    <td>{{ cadastro.get("Telefone","") }}</td>
+                    <td>{{ cadastro.data }}</td>
+                    <td>{{ cadastro.nome }}</td>
+                    <td>{{ cadastro.cpf }}</td>
+                    <td>{{ cadastro.instituicao }}</td>
+                    <td>{{ cadastro.email_usuario }}</td>
+                    <td>{{ cadastro.telefone }}</td>
                     <td>
                         {% if cadastro.get("Arquivo") %}
                             <a href="{{ url_for('uploads', filename=cadastro['Arquivo']) }}" target="_blank">Visualizar</a>
