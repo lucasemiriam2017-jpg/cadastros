@@ -136,14 +136,6 @@ def baixar_csv():
         headers={"Content-Disposition": "attachment;filename=cadastros.csv"}
     )
 
-@app.route("/ver-uploads")
-def ver_uploads():
-    """Mostra arquivos enviados"""
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
-    arquivos = [f for f in os.listdir(UPLOAD_FOLDER) if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
-    return render_template("uploads.html", arquivos=arquivos)
-
 @app.route("/uploads/<int:cadastro_id>")
 def uploads(cadastro_id):
     """Baixar ou visualizar arquivo específico"""
