@@ -104,7 +104,7 @@
             <tbody>
                 {% for cadastro in cadastros %}
                 <tr>
-                    <td>{{ cadastro.data }}</td>
+                    <td>{{ cadastro.data.strftime('%d/%m/%Y') }}</td>
                     <td>{{ cadastro.nome }}</td>
                     <td>{{ cadastro.cpf }}</td>
                     <td>{{ cadastro.instituicao }}</td>
