@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for, session
+from flask import Flask, render_template, request, send_file, redirect, url_for, session, abort
 import os
 from datetime import datetime
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from werkzeug.utils import safe_join
 
 # -------------------- CONFIGURAÇÃO --------------------
 load_dotenv()
@@ -143,7 +144,12 @@ def uploads(filename):
     """Baixar ou visualizar arquivo específico"""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    return send_file(os.path.join(UPLOAD_FOLDER, filename))
+
+    caminho = safe_join(UPLOAD_FOLDER, filename)
+    if not os.path.isfile(caminho):
+        abort(404)
+
+    return send_file(caminho)
 
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
