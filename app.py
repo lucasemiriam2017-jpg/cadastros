@@ -19,37 +19,45 @@ ADMIN_USER = os.environ.get("ADMIN_USER")
 ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
 # -------------------- CONEXÃO COM POSTGRES --------------------
-DATABASE_URL = os.environ.get("DATABASE_URL")  # coloque aqui a URL do Neon no Render
-conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-cursor = conn.cursor()
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_conn():
+    """Cria uma nova conexão a cada operação (evita cursor fechado)."""
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 # Cria tabela se não existir
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS cadastros (
-    id SERIAL PRIMARY KEY,
-    data TIMESTAMP DEFAULT NOW(),
-    nome TEXT,
-    cpf TEXT,
-    instituicao TEXT,
-    email_usuario TEXT,
-    telefone TEXT,
-    nome_arquivo TEXT,
-    lgpd_aceite TEXT
-)
-""")
-conn.commit()
+with get_conn() as conn:
+    with conn.cursor() as cursor:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cadastros (
+            id SERIAL PRIMARY KEY,
+            data TIMESTAMP DEFAULT NOW(),
+            nome TEXT,
+            cpf TEXT,
+            instituicao TEXT,
+            email_usuario TEXT,
+            telefone TEXT,
+            nome_arquivo TEXT,
+            lgpd_aceite TEXT
+        )
+        """)
+        conn.commit()
 
 # -------------------- FUNÇÕES AUXILIARES --------------------
 def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite):
-    cursor.execute("""
-        INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite))
-    conn.commit()
+    with get_conn() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite))
+            conn.commit()
 
 def listar_cadastros():
-    cursor.execute("SELECT * FROM cadastros ORDER BY data DESC")
-    return cursor.fetchall()
+    with get_conn() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM cadastros ORDER BY data DESC")
+            return cursor.fetchall()
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
@@ -114,7 +122,6 @@ def baixar_csv():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
-    # Gerar CSV temporário a partir do banco
     import csv
     from io import StringIO
     output = StringIO()
@@ -145,10 +152,9 @@ def uploads(filename):
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
-    caminho = safe_join(UPLOAD_FOLDER, filename)
-    if not os.path.isfile(caminho):
+    caminho = safe_join(os.path.abspath(UPLOAD_FOLDER), filename)
+    if not os.path.exists(caminho):
         abort(404)
-
     return send_file(caminho)
 
 # -------------------- MAIN --------------------
