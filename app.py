@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for, session, abort
+from flask import Flask, render_template, request, send_file, redirect, url_for, session
 import os
 from datetime import datetime
+from io import BytesIO
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from werkzeug.utils import safe_join
 
 # -------------------- CONFIGURAÇÃO --------------------
 load_dotenv()
@@ -19,45 +19,42 @@ ADMIN_USER = os.environ.get("ADMIN_USER")
 ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
 # -------------------- CONEXÃO COM POSTGRES --------------------
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
-def get_conn():
-    """Cria uma nova conexão a cada operação (evita cursor fechado)."""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+DATABASE_URL = os.environ.get("DATABASE_URL")  # URL do Neon no Render
+conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+cursor = conn.cursor()
 
 # Cria tabela se não existir
-with get_conn() as conn:
-    with conn.cursor() as cursor:
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cadastros (
-            id SERIAL PRIMARY KEY,
-            data TIMESTAMP DEFAULT NOW(),
-            nome TEXT,
-            cpf TEXT,
-            instituicao TEXT,
-            email_usuario TEXT,
-            telefone TEXT,
-            nome_arquivo TEXT,
-            lgpd_aceite TEXT
-        )
-        """)
-        conn.commit()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS cadastros (
+    id SERIAL PRIMARY KEY,
+    data TIMESTAMP DEFAULT NOW(),
+    nome TEXT,
+    cpf TEXT,
+    instituicao TEXT,
+    email_usuario TEXT,
+    telefone TEXT,
+    nome_arquivo TEXT,
+    arquivo_bytes BYTEA,
+    lgpd_aceite TEXT
+)
+""")
+conn.commit()
 
 # -------------------- FUNÇÕES AUXILIARES --------------------
-def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite):
-    with get_conn() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite))
-            conn.commit()
+def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite):
+    cursor.execute("""
+        INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite))
+    conn.commit()
 
 def listar_cadastros():
-    with get_conn() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM cadastros ORDER BY data DESC")
-            return cursor.fetchall()
+    cursor.execute("SELECT * FROM cadastros ORDER BY data DESC")
+    return cursor.fetchall()
+
+def obter_arquivo(cadastro_id):
+    cursor.execute("SELECT nome_arquivo, arquivo_bytes FROM cadastros WHERE id = %s", (cadastro_id,))
+    return cursor.fetchone()
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
@@ -77,14 +74,15 @@ def enviar():
 
     # Salvar arquivo, se houver
     arquivo = request.files.get("arquivo")
-    nome_arquivo = ""
+    nome_arquivo = None
+    arquivo_bytes = None
     if arquivo and arquivo.filename != "":
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         nome_arquivo = f"{timestamp}_{arquivo.filename}"
-        arquivo.save(os.path.join(UPLOAD_FOLDER, nome_arquivo))
+        arquivo_bytes = arquivo.read()
 
     # Salvar dados no PostgreSQL
-    salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, lgpd_aceite)
+    salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
 
     return render_template("obrigado.html", nome=nome, instituicao=instituicao)
 
@@ -146,16 +144,15 @@ def ver_uploads():
     arquivos = [f for f in os.listdir(UPLOAD_FOLDER) if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))]
     return render_template("uploads.html", arquivos=arquivos)
 
-@app.route("/uploads/<filename>")
-def uploads(filename):
+@app.route("/uploads/<int:cadastro_id>")
+def uploads(cadastro_id):
     """Baixar ou visualizar arquivo específico"""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-
-    caminho = safe_join(os.path.abspath(UPLOAD_FOLDER), filename)
-    if not os.path.exists(caminho):
-        abort(404)
-    return send_file(caminho)
+    arquivo = obter_arquivo(cadastro_id)
+    if not arquivo or not arquivo['arquivo_bytes']:
+        return "Arquivo não encontrado", 404
+    return send_file(BytesIO(arquivo['arquivo_bytes']), download_name=arquivo['nome_arquivo'], as_attachment=True)
 
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
