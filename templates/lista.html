@@ -64,15 +64,30 @@
         .button-link {
             display: inline-block;
             padding: 8px 12px;
-            margin-top: 8px;
+            margin-left: 6px;
             background-color: #4a90e2;
             color: white;
             border-radius: 8px;
             text-decoration: none;
             transition: 0.3s;
+            border: none;
+            cursor: pointer;
         }
         .button-link:hover {
             background-color: #357ab8;
+        }
+        .button-danger {
+            background-color: #e24a4a;
+        }
+        .button-danger:hover {
+            background-color: #c13c3c;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
     </style>
 </head>
@@ -84,9 +99,22 @@
             <div class="info">Erro ao carregar a lista: {{ error }}</div>
         {% endif %}
 
-        <div class="info small">
-            Total de cadastros: {{ cadastros|length }}  
-            <a class="button-link" href="/baixar-csv">⬇️ Baixar CSV</a>
+        <div class="info small top-actions">
+            <div>
+                Total de cadastros: {{ cadastros|length }}
+            </div>
+            <div>
+                <a class="button-link" href="/baixar-csv">⬇️ Baixar CSV</a>
+
+                <!-- Botão Limpar Tudo -->
+                <form action="{{ url_for('limpar_tudo') }}" method="post" style="display:inline;" 
+                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar TODOS os cadastros? Esta ação não pode ser desfeita.');">
+                    <button type="submit" class="button-link button-danger">🗑️ Limpar Tudo</button>
+                </form>
+
+                <!-- Botão Logout -->
+                <a class="button-link" href="{{ url_for('logout') }}">🚪 Logout</a>
+            </div>
         </div>
 
         <table>
