@@ -5,6 +5,8 @@ from io import BytesIO, StringIO
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from contextlib import contextmanager
+import csv
 
 # -------------------- CONFIGURAÇÃO --------------------
 load_dotenv()
@@ -18,12 +20,22 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ADMIN_USER = os.environ.get("ADMIN_USER")
 ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
-# -------------------- CONEXÃO COM POSTGRES --------------------
-DATABASE_URL = os.environ.get("DATABASE_URL")  # URL do Neon no Render
-conn = psycopg2.connect(DATABASE_URL)
+# -------------------- CONTEXT MANAGER --------------------
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Cria tabela se não existir
-with conn.cursor() as cursor:
+@contextmanager
+def get_conn_cursor():
+    """Abre conexão + cursor, fecha automaticamente no final"""
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            yield conn, cursor
+        conn.commit()
+    finally:
+        conn.close()
+
+# -------------------- CRIAÇÃO DE TABELA --------------------
+with get_conn_cursor() as (conn, cursor):
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS cadastros (
         id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -38,36 +50,32 @@ with conn.cursor() as cursor:
         lgpd_aceite TEXT
     )
     """)
-    conn.commit()
 
 # -------------------- FUNÇÕES AUXILIARES --------------------
 def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite):
-    with conn.cursor() as cursor:
+    with get_conn_cursor() as (conn, cursor):
         cursor.execute("""
             INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite))
-        conn.commit()
 
 def listar_cadastros():
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+    with get_conn_cursor() as (conn, cursor):
         cursor.execute("SELECT * FROM cadastros ORDER BY id DESC")
         return cursor.fetchall()
 
 def obter_arquivo(cadastro_id):
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+    with get_conn_cursor() as (conn, cursor):
         cursor.execute("SELECT nome_arquivo, arquivo_bytes FROM cadastros WHERE id = %s", (cadastro_id,))
         return cursor.fetchone()
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
 def index():
-    """Página inicial com formulário de cadastro"""
     return render_template("form.html")
 
 @app.route("/enviar", methods=["POST"])
 def enviar():
-    """Recebe dados do formulário e salva no banco + upload de arquivo"""
     nome = request.form.get("nome", "")
     cpf = request.form.get("cpf", "")
     instituicao = request.form.get("instituicao", "")
@@ -75,7 +83,6 @@ def enviar():
     telefone = request.form.get("telefone", "")
     lgpd_aceite = request.form.get("lgpd_aceite", "Não informado")
 
-    # Salvar arquivo, se houver
     arquivo = request.files.get("arquivo")
     nome_arquivo = None
     arquivo_bytes = None
@@ -84,15 +91,12 @@ def enviar():
         nome_arquivo = f"{timestamp}_{arquivo.filename}"
         arquivo_bytes = arquivo.read()
 
-    # Salvar dados no PostgreSQL
     salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
-
     return render_template("obrigado.html", nome=nome, instituicao=instituicao)
 
 # -------------------- ROTAS ADMIN --------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Login do administrador"""
     if request.method == "POST":
         usuario = request.form.get("usuario")
         senha = request.form.get("senha")
@@ -105,13 +109,11 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """Logout do administrador"""
     session.pop("logged_in", None)
     return render_template("logout.html")
 
 @app.route("/lista")
 def lista():
-    """Exibe todos os cadastros para o admin"""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     cadastros = listar_cadastros()
@@ -119,10 +121,9 @@ def lista():
 
 @app.route("/baixar-csv")
 def baixar_csv():
-    """Permite baixar o CSV de cadastros"""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    
+
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo", "LGPD"])
@@ -140,7 +141,6 @@ def baixar_csv():
 
 @app.route("/uploads/<int:cadastro_id>")
 def uploads(cadastro_id):
-    """Baixar ou visualizar arquivo específico"""
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     arquivo = obter_arquivo(cadastro_id)
