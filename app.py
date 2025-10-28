@@ -110,7 +110,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("logged_in", None)
-    return render_template("logout.html")
+    return redirect(url_for("login"))
 
 @app.route("/lista")
 def lista():
@@ -147,6 +147,18 @@ def uploads(cadastro_id):
     if not arquivo or not arquivo['arquivo_bytes']:
         return "Arquivo não encontrado", 404
     return send_file(BytesIO(arquivo['arquivo_bytes']), download_name=arquivo['nome_arquivo'], as_attachment=True)
+
+# -------------------- ROTA LIMPAR TUDO --------------------
+@app.route("/limpar-tudo", methods=["POST"])
+def limpar_tudo():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    with get_conn_cursor() as (conn, cursor):
+        cursor.execute("DELETE FROM cadastros")
+        conn.commit()
+
+    return redirect(url_for("lista"))
 
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
