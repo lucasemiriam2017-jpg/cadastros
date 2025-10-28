@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for, session
+from flask import Flask, render_template, request, send_file, redirect, url_for, session, Response
 import os
 from datetime import datetime
-from io import BytesIO
+from io import BytesIO, StringIO
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -20,41 +20,44 @@ ADMIN_PASS = os.environ.get("ADMIN_PASS")
 
 # -------------------- CONEXÃO COM POSTGRES --------------------
 DATABASE_URL = os.environ.get("DATABASE_URL")  # URL do Neon no Render
-conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-cursor = conn.cursor()
+conn = psycopg2.connect(DATABASE_URL)
 
 # Cria tabela se não existir
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS cadastros (
-    id SERIAL PRIMARY KEY,
-    data TIMESTAMP DEFAULT NOW(),
-    nome TEXT,
-    cpf TEXT,
-    instituicao TEXT,
-    email_usuario TEXT,
-    telefone TEXT,
-    nome_arquivo TEXT,
-    arquivo_bytes BYTEA,
-    lgpd_aceite TEXT
-)
-""")
-conn.commit()
+with conn.cursor() as cursor:
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS cadastros (
+        id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        data TIMESTAMP DEFAULT NOW(),
+        nome TEXT,
+        cpf TEXT,
+        instituicao TEXT,
+        email_usuario TEXT,
+        telefone TEXT,
+        nome_arquivo TEXT,
+        arquivo_bytes BYTEA,
+        lgpd_aceite TEXT
+    )
+    """)
+    conn.commit()
 
 # -------------------- FUNÇÕES AUXILIARES --------------------
 def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite):
-    cursor.execute("""
-        INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite))
-    conn.commit()
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO cadastros (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (nome, cpf, instituicao, email_usuario, telefone, nome_arquivo, arquivo_bytes, lgpd_aceite))
+        conn.commit()
 
 def listar_cadastros():
-    cursor.execute("SELECT * FROM cadastros ORDER BY id DESC")
-    return cursor.fetchall()
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        cursor.execute("SELECT * FROM cadastros ORDER BY id DESC")
+        return cursor.fetchall()
 
 def obter_arquivo(cadastro_id):
-    cursor.execute("SELECT nome_arquivo, arquivo_bytes FROM cadastros WHERE id = %s", (cadastro_id,))
-    return cursor.fetchone()
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        cursor.execute("SELECT nome_arquivo, arquivo_bytes FROM cadastros WHERE id = %s", (cadastro_id,))
+        return cursor.fetchone()
 
 # -------------------- ROTAS PÚBLICAS --------------------
 @app.route("/")
@@ -120,16 +123,15 @@ def baixar_csv():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
     
-    import csv
-    from io import StringIO
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(["Data", "Nome", "CPF", "Instituição", "E-mail", "Telefone", "Arquivo", "LGPD"])
     for c in listar_cadastros():
-        writer.writerow([c['data'], c['nome'], c['cpf'], c['instituicao'], c['email_usuario'], c['telefone'], c['nome_arquivo'], c['lgpd_aceite']])
+        writer.writerow([
+            c['data'], c['nome'], c['cpf'], c['instituicao'],
+            c['email_usuario'], c['telefone'], c['nome_arquivo'], c['lgpd_aceite']
+        ])
     output.seek(0)
-    
-    from flask import Response
     return Response(
         output,
         mimetype="text/csv",
@@ -149,7 +151,3 @@ def uploads(cadastro_id):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
