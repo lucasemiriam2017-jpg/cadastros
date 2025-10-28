@@ -49,7 +49,7 @@ def salvar_cadastro(nome, cpf, instituicao, email_usuario, telefone, nome_arquiv
     conn.commit()
 
 def listar_cadastros():
-    cursor.execute("SELECT * FROM playing_with_neon ORDER BY id DESC")
+    cursor.execute("SELECT * FROM cadastros ORDER BY id DESC")
     return cursor.fetchall()
 
 def obter_arquivo(cadastro_id):
@@ -149,6 +149,7 @@ def uploads(cadastro_id):
 # -------------------- MAIN --------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
